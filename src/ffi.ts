@@ -2,7 +2,9 @@ import { cachedir } from "@denosaurs/cache/directories";
 import { decodeBase64 } from "@std/encoding/base64";
 import { join } from "@std/path/join";
 
-import * as internals from "./private.mod.ts";
+import { GLFW_X86_64_PC_WINDOWS_MSVC } from "./artifacts/x86_64-pc-windows-msvc.ts";
+import { GLFW_X86_64_UNKNOWN_LINUX_GNU } from "./artifacts/x86_64-unknown-linux-gnu.ts";
+import { symbols } from "./symbols.ts";
 
 /** The major version of GLFW used by this module. */
 export const GLFW_VERSION_MAJOR = 3;
@@ -33,11 +35,11 @@ removeCacheFile();
 try {
     switch (Deno.build.os) {
         case "windows":
-            Deno.writeFileSync(CACHE_FILE_PATH, decodeBase64(internals.GLFW_X86_64_PC_WINDOWS_MSVC));
+            Deno.writeFileSync(CACHE_FILE_PATH, decodeBase64(GLFW_X86_64_PC_WINDOWS_MSVC));
             break;
 
         case "linux":
-            Deno.writeFileSync(CACHE_FILE_PATH, decodeBase64(internals.GLFW_X86_64_UNKNOWN_LINUX_GNU));
+            Deno.writeFileSync(CACHE_FILE_PATH, decodeBase64(GLFW_X86_64_UNKNOWN_LINUX_GNU));
             break;
     }
 } catch (error) {
@@ -53,7 +55,6 @@ function removeCacheFile(): void {
     }
 }
 
-const symbols = internals.symbols;
 const lib: Deno.DynamicLibrary<typeof symbols> = Deno.dlopen(CACHE_FILE_PATH, symbols);
 
 /**
