@@ -4,20 +4,21 @@
         "noUncheckedIndexedAccess": true
     },
 
-    "exports": { ".": "./src/mod.ts" },
+    "exports": { ".": "./src/public.mod.ts" },
 
     "imports": {
         "#/": "./",
         "$/": "./src/",
 
-        "@std/encoding": "jsr:@std/encoding@^1.0.10"
+        "@denosaurs/cache": "jsr:@denosaurs/cache@^0.2.15",
+        "@std/encoding": "jsr:@std/encoding@^1.0.10",
+        "@std/path": "jsr:@std/path@^1.1.1"
     },
 
     "license": "MIT",
 
     "lint": {
         "exclude": ["**/*.min.js", "**/*.vendor.js"],
-        "plugins": [".deno/lint.ts"],
         "rules": {
             "include": [
                 "camelcase",
@@ -50,5 +51,5 @@
     },
 
     "name": "@zerm/glfw",
-    "version": "1.0.0"
+    "version": "2.0.0"
 }

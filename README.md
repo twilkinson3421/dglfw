@@ -15,24 +15,15 @@ import { glfw } from "<import-path>";
 
 const WIDTH = 800;
 const HEIGHT = 600;
-const WINDOW_MONITOR = null;
-const WINDOW_SHARE = null;
-
-const SWAP_INTERVAL = 1;
+const TITLE = "Example GLFW Window";
 
 glfw.init();
 
-const window = glfw.createWindow(
-    WIDTH,
-    HEIGHT,
-    new TextEncoder().encode(`Example GLFW Window\0`),
-    WINDOW_MONITOR,
-    WINDOW_SHARE
-);
+const window = glfw.createWindow(WIDTH, HEIGHT, new TextEncoder().encode(`${TITLE}\0`), null, null);
 
 glfw.makeContextCurrent(window);
 
-glfw.swapInterval(SWAP_INTERVAL);
+glfw.swapInterval(1);
 
 while (!glfw.windowShouldClose(window)) {
     glfw.pollEvents();

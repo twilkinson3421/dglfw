@@ -1,91 +1,74 @@
+import { cachedir } from "@denosaurs/cache/directories";
 import { decodeBase64 } from "@std/encoding/base64";
+import { join } from "@std/path/join";
 
-import { DGlfwError } from "./errors.ts";
-import { symbols } from "./symbols.ts";
+import * as internals from "./private.mod.ts";
 
-// deno-lint-ignore camelcase
-import glfw_x86_64_pc_windows_msvc from "./artifacts/x86_64-pc-windows-msvc.ts";
-// deno-lint-ignore camelcase
-import glfw_x86_64_unknown_linux_gnu from "./artifacts/x86_64-unknown-linux-gnu.ts";
-
+/** The major version of GLFW used by this module. */
 export const GLFW_VERSION_MAJOR = 3;
+/** The minor version of GLFW used by this module. */
 export const GLFW_VERSION_MINOR = 4;
-export const GLFW_VERSION_REVISION = 0;
 
-const DYLIB_PREFIX = `libglfw-${GLFW_VERSION_MAJOR}_${GLFW_VERSION_MINOR}_${GLFW_VERSION_REVISION}-deno__`;
-let DYLIB_SUFFIX: string;
+switch (Deno.build.os) {
+    case "windows":
+    case "linux":
+        break;
 
-let tempFilePath: string | undefined;
+    default:
+        throw new Error(`Unsupported target: ${Deno.build.target}`);
+}
 
-function checkTarget(): void {
+switch (Deno.build.arch) {
+    case "x86_64":
+        break;
+
+    default:
+        throw new Error(`Unsupported target: ${Deno.build.target}`);
+}
+
+const CACHE_FILE_PATH = join(cachedir(), `glfw-${GLFW_VERSION_MAJOR}_${GLFW_VERSION_MINOR}-${Deno.build.target}`);
+
+removeCacheFile();
+
+try {
     switch (Deno.build.os) {
         case "windows":
-            DYLIB_SUFFIX = ".dll";
+            Deno.writeFileSync(CACHE_FILE_PATH, decodeBase64(internals.GLFW_X86_64_PC_WINDOWS_MSVC));
             break;
 
         case "linux":
-            DYLIB_SUFFIX = ".so";
+            Deno.writeFileSync(CACHE_FILE_PATH, decodeBase64(internals.GLFW_X86_64_UNKNOWN_LINUX_GNU));
             break;
-
-        default:
-            throw DGlfwError.targetNotSupported();
     }
+} catch (error) {
+    throw new Error(`Failed to write cache file`, { cause: error });
+}
 
-    switch (Deno.build.arch) {
-        case "x86_64":
-            break;
-        default:
-            throw DGlfwError.targetNotSupported();
+function removeCacheFile(): void {
+    try {
+        Deno.removeSync(CACHE_FILE_PATH);
+    } catch {
+        // Either the file doesn't exist; this is fine
+        // Else there is nothing we can do; this is not critical
     }
 }
 
-function writeTempFile(): void {
-    tempFilePath = Deno.makeTempFileSync({ prefix: DYLIB_PREFIX, suffix: DYLIB_SUFFIX });
+const symbols = internals.symbols;
+const lib: Deno.DynamicLibrary<typeof symbols> = Deno.dlopen(CACHE_FILE_PATH, symbols);
 
-    switch (Deno.build.os) {
-        case "windows":
-            Deno.writeFileSync(tempFilePath, decodeBase64(glfw_x86_64_pc_windows_msvc));
-            break;
-
-        case "linux":
-            Deno.writeFileSync(tempFilePath, decodeBase64(glfw_x86_64_unknown_linux_gnu));
-            break;
-    }
-}
-
-function cleanUp(): void {
-    removeTempFile: {
-        try {
-            if (tempFilePath) Deno.removeSync(tempFilePath);
-        } catch (error) {
-            if (error instanceof Deno.errors.NotFound) break removeTempFile;
-            throw DGlfwError.failedToRemoveTempData(error);
-        }
-    }
-}
-
-checkTarget();
-writeTempFile();
-
-const ERROR_EVENT_TYPE = "unhandledrejection";
-globalThis.addEventListener(ERROR_EVENT_TYPE, cleanUp);
-
-if (!tempFilePath) throw DGlfwError.failedToWriteTempData();
-
-const lib: Deno.DynamicLibrary<typeof symbols> = Deno.dlopen(tempFilePath, symbols);
-
-function deinit(): void {
+/**
+ * Deinitializes the GLFW library bindings.
+ *
+ * **This is not the same as calling `glfw.terminate()`.**
+ *
+ * **Both functions should be called before exiting the program.**
+ */
+export function deinit(): void {
     lib.close();
-    cleanUp();
+    removeCacheFile();
 }
 
-globalThis.removeEventListener(ERROR_EVENT_TYPE, cleanUp);
-globalThis.addEventListener(ERROR_EVENT_TYPE, deinit);
-
-const UNLOAD_EVENT_TYPE = "unload";
-globalThis.addEventListener(UNLOAD_EVENT_TYPE, deinit);
-
-const SIGINT_EVENT: Deno.Signal = "SIGINT";
-Deno.addSignalListener(SIGINT_EVENT, deinit);
-
+/**
+ * Bindings for the GLFW library.
+ */
 export const glfw = lib.symbols;
