@@ -28,7 +28,8 @@ switch (Deno.build.arch) {
         throw new Error(`Unsupported target: ${Deno.build.target}`);
 }
 
-const CACHE_FILE_PATH = join(cachedir(), `glfw-${GLFW_VERSION_MAJOR}_${GLFW_VERSION_MINOR}-${Deno.build.target}`);
+const EXT = Deno.build.os === "windows" ? ".dll" : Deno.build.os === "linux" ? ".so" : "";
+const CACHE_FILE_PATH = join(cachedir(), `glfw-${GLFW_VERSION_MAJOR}_${GLFW_VERSION_MINOR}-${Deno.build.target}${EXT}`);
 
 removeCacheFile();
 
