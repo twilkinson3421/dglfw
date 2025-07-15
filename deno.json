@@ -4,7 +4,7 @@
         "noUncheckedIndexedAccess": true
     },
 
-    "exports": { ".": "./src/public.mod.ts" },
+    "exports": { ".": "./src/mod.ts" },
 
     "imports": {
         "#/": "./",
