@@ -4,12 +4,8 @@ import { join } from "@std/path/join";
 
 import { GLFW_X86_64_PC_WINDOWS_MSVC } from "./artifacts/x86_64-pc-windows-msvc.ts";
 import { GLFW_X86_64_UNKNOWN_LINUX_GNU } from "./artifacts/x86_64-unknown-linux-gnu.ts";
+import { GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR } from "./constants.ts";
 import { symbols } from "./symbols.ts";
-
-/** The major version of GLFW used by this module. */
-export const GLFW_VERSION_MAJOR = 3;
-/** The minor version of GLFW used by this module. */
-export const GLFW_VERSION_MINOR = 4;
 
 switch (Deno.build.os) {
     case "windows":
